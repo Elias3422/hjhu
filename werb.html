@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Web Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1c1c1c;
+            color: #ffffff;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: rgba(30, 30, 30, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            max-width: 800px;
+            width: 100%;
+        }
+        iframe {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 10px;
+            outline: none;
+            margin-top: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #ffcc00;
+        }
+        h2 {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #ffffff;
+        }
+        .message {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #ffcc00;
+        }
+        .login, .user-input, .user-overview, .stream-input, .delete-user, .ban-area {
+            margin-bottom: 20px;
+        }
+        .login input {
+            padding: 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            width: 80%;
+            background-color: #2a2a2a;
+            color: white;
+            font-size: 16px;
+        }
+        input[type="number"], select {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            width: calc(80% - 22px);
+            background-color: #2a2a2a;
+            color: white;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .logout {
+            margin-top: 20px;
+        }
+        .logout button {
+            background-color: #f44336;
+        }
+        .logout button:hover {
+            background-color: #e53935;
+        }
+        .stream-list, .timer-ban {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .stream-list ul, .banned-list ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .stream-list li, .banned-list li {
+            margin: 5px 0;
+            cursor: pointer;
+            color: #2196F3;
+            transition: color 0.3s;
+        }
+        .stream-list li:hover, .banned-list li:hover {
+            text-decoration: underline;
+            color: #00acc1;
+        }
+        .timer-info {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        /* Chat Styles */
+        .chat-container {
+            margin-top: 20px;
+            text-align: left;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #2a2a2a;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin: 5px 0;
+        }
+        .chat-input {
+            display: flex;
+            margin-top: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+        }
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IPTV Web Player</h1>
+        <div class="login" id="loginForm">
+            <input type="text" id="username" placeholder="Benutzername" required>
+            <button onclick="login()">Anmelden</button>
+        </div>
+        
+        <!-- Castr Player Embed ersetzt Video -->
+        <iframe 
+            id="iptvPlayer"
+            src="https://player.castr.com/live_e39959007ac111f0acc3236deea1c53a" 
+            width="100%" 
+            style="aspect-ratio: 16/9; min-height: 340px; border-radius: 10px; margin-top: 20px; display:none;" 
+            frameborder="0" 
+            scrolling="no" 
+            allow="autoplay" 
+            allowfullscreen 
+            webkitallowfullscreen 
+            mozallowfullscreen 
+            oallowfullscreen 
+            msallowfullscreen>
+        </iframe>
+
+        <div class="message" id="message" style="display: none;">Wenn der Stream nicht lädt, überprüfen Sie bitte den Link.</div>
+        <div class="logout" id="logoutDiv" style="display: none;">
+            <button onclick="logout()">Abmelden</button>
+        </div>
+        <div class="user-input" id="userInputDiv" style="display: none;">
+            <h2>Benutzer hinzufügen:</h2>
+            <input type="text" id="newUser" placeholder="Neuer Benutzername">
+            <select id="newUserRole">
+                <option value="user">Normaler Benutzer</option>
+                <option value="mod">Moderator</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button onclick="addUser()">Hinzufügen</button>
+        </div>
+        <div class="user-list" id="userListDiv" style="display: none;">
+            <h2>Verfügbare Benutzer:</h2>
+            <ul id="userList"></ul>
+        </div>
+        <div class="banned-list" id="bannedListDiv" style="display: none;">
+            <h2>Gebannte Benutzer:</h2>
+            <ul id="bannedList"></ul>
+            <input type="text" id="userToUnban" placeholder="Benutzer entbannen">
+            <button onclick="unbanUser()">Entbannen</button>
+        </div>
+        <div class="user-overview" id="userOverviewDiv" style="display: none;">
+            <h2>Benutzer Übersicht:</h2>
+            <input type="text" id="userToBan" placeholder="Benutzer bannen">
+            <input type="number" id="banDuration" placeholder="Dauer (min, 5-60)" min="5" max="60">
+            <input type="text" id="banReason" placeholder="Bann Grund">
+            <button onclick="timerBanUser()">Timer Bannen</button>
+        </div>
+        <div class="delete-user" id="deleteUserDiv" style="display: none;">
+            <h2>Benutzer löschen:</h2>
+            <input type="text" id="userToDelete" placeholder="Benutzername löschen">
+            <button onclick="deleteUser()">Löschen</button>
+        </div>
+
+        <div class="ban-area" id="banArea" style="display:none;"></div>
+    </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            if (username !== "") {
+                document.getElementById("loginForm").style.display = "none";
+                document.getElementById("logoutDiv").style.display = "block";
+                document.getElementById("iptvPlayer").style.display = "block";
+            } else {
+                alert("Bitte Benutzernamen eingeben!");
+            }
+        }
+
+        function logout() {
+            document.getElementById("loginForm").style.display = "block";
+            document.getElementById("logoutDiv").style.display = "none";
+            document.getElementById("iptvPlayer").style.display = "none";
+        }
+
+        function addUser() {
+            alert("Funktion Benutzer hinzufügen (Demo).");
+        }
+
+        function deleteUser() {
+            alert("Funktion Benutzer löschen (Demo).");
+        }
+
+        function timerBanUser() {
+            alert("Funktion Benutzer zeitlich bannen (Demo).");
+        }
+
+        function unbanUser() {
+            alert("Funktion Benutzer entbannen (Demo).");
+        }
+    </script>
+</body>
+</html>
